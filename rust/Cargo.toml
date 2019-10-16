@@ -13,6 +13,7 @@ rayon = "*"
 [features]
 default = []
 print = []
+timeit = []
 
 [lib]
 name = "utils"

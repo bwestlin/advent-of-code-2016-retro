@@ -8,7 +8,7 @@ fi
 
 FEATURES=""
 INPUT=""
-if [ "$2" == "print" ]; then
+if [ "$2" == "timeit" ]; then
   FEATURES="$2"
   INPUT="${@:3}"
 else
