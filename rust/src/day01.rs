@@ -105,10 +105,13 @@ fn main() {
     });
 }
 
+fn read_input<R: Read>(reader: BufReader<R>) -> io::Result<Input> {
+    Ok(reader.lines().next().unwrap()?.split(",").map(|m| m.trim().parse::<Movement>().unwrap()).collect())
+}
+
 fn input() -> io::Result<Input> {
     let f = File::open(env::args().skip(1).next().expect("No input file given"))?;
-    let f = BufReader::new(f);
-    Ok(f.lines().next().unwrap()?.split(",").map(|m| m.trim().parse::<Movement>().unwrap()).collect())
+    read_input(BufReader::new(f))
 }
 
 #[cfg(test)]
@@ -116,7 +119,7 @@ mod tests {
     use super::*;
 
     fn as_input(s: &str) -> Input {
-        s.split(',').map(|m| m.trim().parse::<Movement>().unwrap()).collect()
+        read_input(BufReader::new(s.split('\n').map(|s| s.trim()).collect::<Vec<_>>().join("\n").as_bytes())).unwrap()
     }
 
     #[test]
