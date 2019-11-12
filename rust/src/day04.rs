@@ -1,72 +1,89 @@
-extern crate regex;
-#[macro_use] extern crate lazy_static;
 extern crate utils;
 
 use std::env;
-use std::collections::HashMap;
-use std::collections::BTreeSet;
-use std::collections::BTreeMap;
+use std::cmp;
 use std::str::FromStr;
 use std::num::ParseIntError;
 use std::io::{self, BufReader};
 use std::io::prelude::*;
 use std::fs::File;
-use regex::Regex;
 use utils::*;
 
 type Input = Vec<Room>;
 
 struct Room {
-    name: String,
+    name: Vec<u8>,
     sector_id: u32,
-    checksum: String
+    checksum: Vec<u8>
 }
+
+const LC_A: u8 = 'a' as u8;
+const UC_A: u8 = 'A' as u8;
+const LC_Z: u8 = 'z' as u8;
+const UC_Z: u8 = 'Z' as u8;
+const ALPHABET_LEN: u32 = 26;
 
 impl Room {
     fn valid_checksum(&self) -> bool {
-        let expected_checksum = self.name.chars()
-            // Store character count for every character {a -> 2, b-> 2, c -> 1, ...}
-            .fold(HashMap::new(), |mut memo: HashMap<char, usize>, c| {
-                if c != '-' {
-                    *memo.entry(c).or_insert(0) += 1;
-                }
-                memo
-            })
-            .iter()
-            // Store characters for every character count {2 -> [a, b], 1 -> [c], ...}
-            .fold(BTreeMap::new(), |mut memo: BTreeMap<usize, BTreeSet<char>>, (&c, &cnt)| {
-                (*memo.entry(cnt).or_insert(BTreeSet::new())).insert(c);
-                memo
-            })
-            .iter().rev()
-            // In the order of hightest character count append charcters in alphabethical order
-            .fold(String::new(), |mut s, (_, chars)| {
-                for &c in chars {
-                    if s.len() < 5 {
-                        s.push(c);
+        let mut name = self.name.clone();
+        let mut counts = [0_u8; 128];
+        let mut max_dupes = 0;
+
+        name.sort();
+        for c in name {
+            let c = c as usize;
+            counts[c] += 1;
+            max_dupes = cmp::max(counts[c], max_dupes);
+        }
+
+        let mut cidx = 0;
+        'outer: for i in 0..max_dupes {
+            let cnts = max_dupes - i;
+            for c in UC_A..=LC_Z {
+                if counts[c as usize] == cnts {
+                    if c != self.checksum[cidx] {
+                        return false;
                     }
-                }
-                s
-            });
-
-        self.checksum.eq(&expected_checksum)
-    }
-
-    fn decrypt_name(&self) -> String {
-        let mut chars = self.name.chars().collect::<Vec<_>>();
-
-        for i in 0..chars.len() {
-            for _ in 0..self.sector_id {
-                chars[i] = match chars[i] {
-                    '-' | ' ' => ' ',
-                    'z'  => 'a',
-                    'Z'  => 'A',
-                    c  => ((c as u8) + 1) as char,
+                    cidx += 1;
+                    if cidx >= 5 {
+                        break 'outer;
+                    }
                 }
             }
         }
 
-        chars.iter().collect::<String>()
+        true
+    }
+
+    fn decrypted_name_is(&self, expected: &[u8]) -> bool {
+        if self.name.len() != expected.len() {
+            return false;
+        }
+        let name = &self.name;
+
+        for i in 0..name.len() {
+            let mut c = name[i];
+
+            if c >= LC_A {
+                c += (self.sector_id % ALPHABET_LEN) as u8;
+                if c > LC_Z {
+                    c -= ALPHABET_LEN as u8;
+                }
+            } else if c >= UC_A {
+                c += (self.sector_id % ALPHABET_LEN) as u8;
+                if c > UC_Z {
+                    c -= ALPHABET_LEN as u8;
+                }
+            } else {
+                c = ' ' as u8;
+            }
+
+            if c != expected[i] {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
@@ -78,8 +95,9 @@ fn part1(input: &Input) -> u32 {
 }
 
 fn part2(input: &Input) -> u32 {
+    let expected_name = "northpole object storage".as_bytes();
     input.iter()
-        .find(|&room| room.decrypt_name().eq("northpole object storage"))
+        .find(|&room| room.decrypted_name_is(expected_name))
         .map_or(0, |room| room.sector_id)
 }
 
@@ -94,13 +112,13 @@ fn main() {
 impl FromStr for Room {
     type Err = ParseIntError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        lazy_static! {
-            static ref RE: Regex = Regex::new(r"^(.*)-(\d+)\[(.*)\]$").unwrap();
-        }
-        let caps = RE.captures(s).unwrap();
-        let get_s = |idx| caps.get(idx).unwrap().as_str().to_string();
-        let get_i = |idx| caps.get(idx).unwrap().as_str().parse::<u32>();
-        Ok(Room { name: get_s(1), sector_id: get_i(2)?, checksum: get_s(3) })
+        let sector_id_sidx = s.rfind('-').unwrap();
+        let checksum_sidx = s.rfind('[').unwrap();
+        Ok(Room {
+            name: s[0..sector_id_sidx].as_bytes().into(),
+            sector_id: s[(sector_id_sidx + 1)..checksum_sidx].parse::<u32>()?,
+            checksum: s[(checksum_sidx + 1)..(checksum_sidx + 6)].as_bytes().into()
+        })
     }
 }
 
