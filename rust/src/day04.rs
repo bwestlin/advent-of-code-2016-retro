@@ -18,10 +18,8 @@ struct Room {
 }
 
 const LC_A: u8 = 'a' as u8;
-const UC_A: u8 = 'A' as u8;
 const LC_Z: u8 = 'z' as u8;
-const UC_Z: u8 = 'Z' as u8;
-const ALPHABET_LEN: u32 = 26;
+const ALPHABET_LEN: u32 = ((LC_Z - LC_A) + 1) as u32;
 
 impl Room {
     fn valid_checksum(&self) -> bool {
@@ -39,7 +37,7 @@ impl Room {
         let mut cidx = 0;
         'outer: for i in 0..max_dupes {
             let cnts = max_dupes - i;
-            for c in UC_A..=LC_Z {
+            for c in LC_A..=LC_Z {
                 if counts[c as usize] == cnts {
                     if c != self.checksum[cidx] {
                         return false;
@@ -56,27 +54,20 @@ impl Room {
     }
 
     fn decrypted_name_is(&self, expected: &[u8]) -> bool {
-        if self.name.len() != expected.len() {
+        let name = &self.name;
+        if name.len() != expected.len() {
             return false;
         }
-        let name = &self.name;
 
         for i in 0..name.len() {
-            let mut c = name[i];
+            let c = name[i];
 
-            if c >= LC_A {
-                c += (self.sector_id % ALPHABET_LEN) as u8;
-                if c > LC_Z {
-                    c -= ALPHABET_LEN as u8;
-                }
-            } else if c >= UC_A {
-                c += (self.sector_id % ALPHABET_LEN) as u8;
-                if c > UC_Z {
-                    c -= ALPHABET_LEN as u8;
-                }
-            } else {
-                c = ' ' as u8;
-            }
+            let c =
+                if c >= LC_A {
+                    LC_A + ((self.sector_id + (c - LC_A) as u32) % ALPHABET_LEN) as u8
+                } else {
+                    ' ' as u8
+                };
 
             if c != expected[i] {
                 return false;
