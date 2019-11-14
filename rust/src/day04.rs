@@ -23,12 +23,10 @@ const ALPHABET_LEN: u32 = ((LC_Z - LC_A) + 1) as u32;
 
 impl Room {
     fn valid_checksum(&self) -> bool {
-        let mut name = self.name.clone();
         let mut counts = [0_u8; 128];
         let mut max_dupes = 0;
 
-        name.sort();
-        for c in name {
+        for &c in &self.name {
             let c = c as usize;
             counts[c] += 1;
             max_dupes = cmp::max(counts[c], max_dupes);
