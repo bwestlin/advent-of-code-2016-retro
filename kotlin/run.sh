@@ -6,7 +6,13 @@ if [ -z "$DAY" ]; then
   exit 1
 fi
 
-INPUT="${@:2}"
+INPUT=""
+if [ "$2" == "timeit" ]; then
+  export TIMEIT=1
+  INPUT="${@:3}"
+else
+  INPUT="${@:2}"
+fi
 
 if [ -z "$INPUT" ]; then
   INPUT="../input/day$DAY"
@@ -15,6 +21,8 @@ fi
 
 mkdir .build &> /dev/null
 
-kotlinc day$DAY.kt -include-runtime -d .build/day$DAY.jar
+set -e
 
-java -jar .build/day$DAY.jar < "$INPUT"
+kotlinc day$DAY.kt helpers.kt -include-runtime -d .build/day$DAY.jar
+
+java -jar .build/day$DAY.jar "$INPUT"
