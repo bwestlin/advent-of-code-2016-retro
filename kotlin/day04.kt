@@ -1,24 +1,27 @@
+package day04
 import kotlin.system.measureTimeMillis
+import java.io.File
 
 data class Room(val name: String, val sectorId: Int, val checkSum: String)
 
 fun validChecksum(r: Room) = r.name
     .filter { it >= 'a' }
-    .toList()
     .groupingBy { it }
     .eachCount()
     .toList()
-    .groupBy { it.second }
-    .mapValues { it.value.map { it.first } }
-    .toList()
-    .sortedByDescending { it.first }
-    .flatMap { it.second.sorted() }
+    .sortedWith(Comparator<Pair<Char, Int>> { (c1, n1), (c2, n2) ->
+        when {
+            n1 > n2 -> -1
+            n1 < n2 -> 1
+            else -> c1 - c2
+        }
+    })
     .take(5)
+    .map { it.first }
     .joinToString("")
     .equals(r.checkSum)
 
 fun decryptName(r: Room) = r.name
-    .toList()
     .map { c ->
         when (c) {
             in 'a'..'z' -> 'a' + (r.sectorId + (c - 'a')) % ('z' - 'a' + 1)
@@ -37,9 +40,9 @@ fun parseRoom(l: String): Room {
     )
 }
 
-fun main() {
-    val ms = measureTimeMillis {
-        val input = generateSequence(::readLine).map(::parseRoom).toList()
+fun main(args: Array<String>) {
+    helpers.measure {
+        val input = File(args[0]).readLines().map(::parseRoom).toList()
 
         val part1 = input.filter(::validChecksum).sumBy { it.sectorId }
 
@@ -48,5 +51,4 @@ fun main() {
         println("Part1: ${part1}")
         println("Part2: ${part2}")
     }
-    println("It took ${ms}ms")
 }
