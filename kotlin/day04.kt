@@ -1,5 +1,4 @@
 package day04
-import kotlin.system.measureTimeMillis
 import java.io.File
 
 data class Room(val name: String, val sectorId: Int, val checkSum: String)
