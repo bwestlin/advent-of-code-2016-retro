@@ -1,4 +1,5 @@
-import kotlin.system.measureTimeMillis
+package day03
+import java.io.File
 
 fun parseSides(l: String) = l.split(' ').filter(String::isNotEmpty).map(String::toInt).toTypedArray()
 
@@ -12,9 +13,9 @@ fun List<Array<Int>>.transposed() = this.chunked(3).flatMap { c ->
     }
 }
 
-fun main() {
-    val ms = measureTimeMillis {
-        val input = generateSequence(::readLine).map(::parseSides).toList()
+fun main(args: Array<String>) {
+    helpers.measure {
+        val input = File(args[0]).readLines().map(::parseSides).toList()
 
         val part1 = input.countValidTriangles()
 
@@ -23,5 +24,4 @@ fun main() {
         println("Part1: ${part1}")
         println("Part2: ${part2}")
     }
-    println("It took ${ms}ms")
 }
