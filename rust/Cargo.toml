@@ -10,6 +10,7 @@ lazy_static = "1.1"
 time = "0.1"
 rayon = "*"
 md5 = "*"
+num_cpus = "*"
 
 [features]
 default = []
