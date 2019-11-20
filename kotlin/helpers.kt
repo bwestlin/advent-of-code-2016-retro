@@ -3,10 +3,16 @@ import kotlin.system.measureTimeMillis
 
 fun measure(f: () -> Unit) {
     if (System.getenv("TIMEIT") != null) {
-        val times = 100
+        var times = 100
         // Warmup
         for (i in 0..times) {
-            f()
+            val ms = measureTimeMillis {
+                f()
+            }
+            if (ms >= 500) {
+                times = 10
+                break
+            }
         }
 
         val start = System.nanoTime()
