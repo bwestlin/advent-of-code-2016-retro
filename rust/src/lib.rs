@@ -10,7 +10,9 @@ pub fn measure<F>(f: F) where F: Fn() -> () {
         f();
         let dur_ns = precise_time_ns() - start;
         if dur_ns > 500_000_000 {
-            _times = 10;
+            _times /= 10;
+        } else if dur_ns < 500_000 {
+            _times *= 10;
         }
         for _ in 0..(_times - 1) {
             f();
