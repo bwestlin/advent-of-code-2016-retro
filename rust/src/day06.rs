@@ -9,12 +9,12 @@ use utils::*;
 type Input = Vec<String>;
 
 fn solve(input: &Input) -> (String, String) {
-    const MESSAGE_LEN: usize = 8;
+    let m_len = input[0].len();
 
     let (p1, p2): (Vec<_>, Vec<_>) = input.iter()
-        .fold(vec![[0_u8; 256]; MESSAGE_LEN], |mut c_counts, message| {
+        .fold(vec![[0_u8; 256]; m_len], |mut c_counts, message| {
             let bytes = message.as_bytes();
-            for bi in 0..MESSAGE_LEN {
+            for bi in 0..m_len {
                 c_counts[bi][bytes[bi] as usize] += 1;
             }
             c_counts
