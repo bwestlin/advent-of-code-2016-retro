@@ -9,7 +9,7 @@ use utils::*;
 type Input = Vec<String>;
 
 fn solve(input: &Input) -> (String, String) {
-    const MESSAGE_LEN: usize = 6;
+    const MESSAGE_LEN: usize = 8;
 
     let (p1, p2): (Vec<_>, Vec<_>) = input.iter()
         .fold(vec![[0_u8; 256]; MESSAGE_LEN], |mut c_counts, message| {
