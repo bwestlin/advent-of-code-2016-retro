@@ -31,18 +31,22 @@ impl Disc {
     }
 }
 
-fn solve(input: &Input) -> (usize, usize) {
+fn solve(discs: &Input) -> (usize, usize) {
+    let start_t = (0..discs[0].positions).find(|t| discs[0].pos(t + 1) == 0).unwrap();
+    let step_t = discs[0].positions;
     let extra_disc = Disc { positions: 11, initial: 0 };
 
     let mut p1 = None;
 
-    for t in 0.. {
-        let all_open = input.iter().enumerate().all(|(i, d)| d.pos(t + i + 1) == 0);
+    for t in (start_t..).step_by(step_t) {
+
+        let all_open = discs.iter().enumerate().all(|(i, d)| d.pos(t + i + 1) == 0);
+
         if all_open && p1.is_none() {
             p1 = Some(t);
         }
 
-        if all_open && extra_disc.pos(t + input.len() + 1) == 0 {
+        if all_open && extra_disc.pos(t + discs.len() + 1) == 0 {
             return (p1.unwrap(), t);
         }
     }
